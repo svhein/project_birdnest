@@ -88,9 +88,11 @@ async function sendToFirestore(pilots){
     for (let i = 0; i < pilots.length; i++){
         // Check if pilot already is in database
         let pilot = pilots[i]
-        console.log('pilotId: ' + pilot.pilotId + pilot.firstName)
-        const query = await db.collection('pilots').where("pilotId", "==" , `P-LD0P2WVL3n`).get();
-        console.log(query.docs.map(doc => console.log(doc.data())))
+        const query = await db.collection('pilots').where("pilotId", "==" , pilot.pilotId).get();
+        // if doesnt exist in database add pilot there
+        if (query.docs.length == 0){
+
+        }
     }
     // const query = await db.collection('pilots').where("firstName", "==" ,"jorma").get();
     
