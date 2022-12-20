@@ -1,21 +1,8 @@
-// import express from 'express'
-const express = require('express')
-// import fetch from 'node-fetch'
 const fetch = require('node-fetch')
-// import xml2js from 'xml2js'
 const xml2js = require('xml2js')
-// import { initializeApp } from "firebase/app";
-// import { getFirestore, collection, addDoc } from "firebase/firestore";
-// import { firebaseConfig } from './firebase-config.js';
-// import { resolve } from 'path';
-// const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
-// import { cert } from 'firebase-admin'
-// import service_account from './service_account.js';
 const admin = require('firebase-admin')
 const service_account = require('./service_account.json')
-const { response } = require('express')
 
-// const app = express()
 admin.initializeApp({
     credential: admin.credential.cert(service_account)
 });
@@ -65,41 +52,29 @@ async function getPilots(serialNumbers){
     return pilots   
 }
 
-// async function getPilots(serialNumbers){
-//     let serials = serialNumbers;
-//     let urls = [] 
-//     for (let i = 0; i < serials.length; i++){
-//         urls.push(`http://assignments.reaktor.com/birdnest/pilots/${serials[i]}`); //Create array of promises       
-//     }    
-//     let droneDataToDb = [] 
-//     Promise.all(urls.map(url => fetch(url)
-//         .then(response => response.text())
-//         .then(result => JSON.parse(result))
-//         .then(async function(result){
-//             result['timeDetected'] = new Date().getTime(); // Add time when detected to the data
-//             console.log(result)
-//             const res = await db.collection('pilots').add(result) // Send pilot to database
-//         })
-//     ))
-// }
-
 async function sendToFirestore(pilots){
-   
     for (let i = 0; i < pilots.length; i++){
         // Check if pilot already is in database
         let pilot = pilots[i]
         const query = await db.collection('pilots').where("pilotId", "==" , pilot.pilotId).get();
         // if doesnt exist in database add pilot there
         if (query.docs.length == 0){
-
+            const res = await db.collection('pilots').add(pilot);
+            console.log('Pilot added with document id: ' + res.id)
         }
     }
-    // const query = await db.collection('pilots').where("firstName", "==" ,"jorma").get();
-    
-    // snapshot.docs.map(doc => console.log(doc.data()))
+}
 
-    // for (let pilot in data)
-    //     await db.collection('pilots').add(pilot) // Send pilot to database
+async function removeOld(){
+    // Time 10 minutes ago
+    let time = new Date().getTime() - 600000;
+    // Get docs that are older than 10 minutes
+    let pilotsToRemove = await db.collection('pilots').where("timeDetected", "<", time).get();
+    
+    // Remove pilots
+    await Promise.all(pilotsToRemove.docs.map(doc => {
+        console.log('Removing ' + doc.id)
+        doc.ref.delete()}));
 }
 
 function calculateDistance(x, y){
@@ -110,13 +85,14 @@ function calculateDistance(x, y){
     return distance
 }
 
+
 async function main(){
     let drones = await getDrones();
     let pilots = await getPilots(drones);
-    await sendToFirestore(pilots)
+    await sendToFirestore(pilots);
+    await removeOld();
 }
 
 setInterval((async () => {
     main();
-    console.log('--')
 }), 2000)
