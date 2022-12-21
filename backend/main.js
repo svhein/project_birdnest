@@ -22,34 +22,42 @@ async function getDrones(){
             
             // Filter drones that are inside no-fly-zone of 100 meters
             let filtered = drones.filter(drone => {
-                let x_coordinate = parseInt(drone.positionX[0]);
-                let y_coordinate = parseInt(drone.positionY[0]);
-                let distance = calculateDistance(x_coordinate, y_coordinate); 
+                let distance = calculateDistance(drone); 
                 if (distance < 100000){
                     return drone
                 }
             })
-            let serials = filtered.map(drone => drone.serialNumber[0]); // List of drone serialnumbers  
-            return serials;
+            // List of tuples containing drone serialnumber and distance to the nest
+            let tuples = filtered.map(drone => [drone.serialNumber[0], calculateDistance(drone)]);   
+            return tuples;
         })
 }
 
-async function getPilots(serialNumbers){
-    let serials = serialNumbers;
-    let urls = [];
-    let pilots = [];
-    for (let i = 0; i < serials.length; i++){
-    urls.push(`http://assignments.reaktor.com/birdnest/pilots/${serials[i]}`); //Create array of promises       
-        }  
-    await Promise.all(urls.map(url => fetch(url)
+/**
+ * 
+ * @param {[[string, number]]} droneData List of tuples where first item is serialnumber and second distance to the nest
+ * @returns List of pilots based 
+ */
+
+async function getPilots(droneData){
+
+    let pilotURLs = []; 
+    for (let i = 0; i < droneData.length; i++){  
+        // Add tuple containing url and distance to the list
+        pilotURLs.push([`http://assignments.reaktor.com/birdnest/pilots/${droneData[i][0]}`, droneData[i][1]]);     
+    }  
+    
+    let pilotData = [];
+    await Promise.all(pilotURLs.map((item) => fetch(item[0])
         .then(response => response.text())
         .then(result => JSON.parse(result))
         .then(async function(result){
             result['timeDetected'] = new Date().getTime(); // Add time when detected to the data
-            pilots.push(result)
+            result['distance'] = item[1] // Add distance to the data
+            pilotData.push(result)
         })
     ))
-    return pilots   
+    return pilotData  
 }
 
 async function sendToFirestore(pilots){
@@ -57,10 +65,28 @@ async function sendToFirestore(pilots){
         // Check if pilot already is in database
         let pilot = pilots[i]
         const query = await db.collection('pilots').where("pilotId", "==" , pilot.pilotId).get();
+       
         // if doesnt exist in database add pilot there
         if (query.docs.length == 0){
             const res = await db.collection('pilots').add(pilot);
             console.log('Pilot added with document id: ' + res.id)
+        }
+        // if exists replace with new doc with new distance
+        // or update time detected
+        else{
+            let queryPilot = query.docs[0].data(); // Query result is list containing one object 
+            if (queryPilot.distance > pilot.distance){
+                const del = await query.docs[0].ref.delete();
+                const res = await db.collection('pilots').add(pilot);
+                console.log(`Pilot ID ${pilot.pilotId} distance updated from ${queryPilot.distance} to ${pilot.distance}`)
+            }
+            else{
+                // Update time detected
+                // const update = await query.docs[0].ref().update({timeDetected: new Date().getTime()})
+                const pilotRef = query.docs[0].ref;
+                const update = await pilotRef.update({timeDetected: new Date().getTime()})
+                console.log('New time detected for document pilot id ' + query.docs[0].data().pilotId)
+            }
         }
     }
 }
@@ -77,7 +103,9 @@ async function removeOld(){
         doc.ref.delete()}));
 }
 
-function calculateDistance(x, y){
+function calculateDistance(drone){
+    let x = parseInt(drone.positionX[0]);
+    let y = parseInt(drone.positionY[0]);
     let x0 = 250000;
     let y0 = 250000;
     let r = 100000;
