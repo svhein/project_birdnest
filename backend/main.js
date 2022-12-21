@@ -10,7 +10,7 @@ const db = admin.firestore();
 const parser = xml2js.Parser();
 
 /**
- * @returns Serialnumbers of drones inside no-fly-zone
+ * @returns Serialnumbers and distances of drones inside no-fly-zone
  */
 async function getDrones(){
     return fetch('http://assignments.reaktor.com/birdnest/drones')
@@ -36,9 +36,8 @@ async function getDrones(){
 /**
  * 
  * @param {[[string, number]]} droneData List of tuples where first item is serialnumber and second distance to the nest
- * @returns List of pilots based 
+ * @returns List of objects containing owner data, distance and detection time
  */
-
 async function getPilots(droneData){
 
     let pilotURLs = []; 
@@ -60,6 +59,11 @@ async function getPilots(droneData){
     return pilotData  
 }
 
+/**
+ * Send data to firestore
+ * @param {*} pilots Data to be send
+ */
+
 async function sendToFirestore(pilots){
     for (let i = 0; i < pilots.length; i++){
         // Check if pilot already is in database
@@ -69,23 +73,23 @@ async function sendToFirestore(pilots){
         // if doesnt exist in database add pilot there
         if (query.docs.length == 0){
             const res = await db.collection('pilots').add(pilot);
-            console.log('Pilot added with document id: ' + res.id)
+            console.log(pilot.firstName, pilot.lastName,' added with document id: ' + res.id)
         }
         // if exists replace with new doc with new distance
         // or update time detected
         else{
             let queryPilot = query.docs[0].data(); // Query result is list containing one object 
-            if (queryPilot.distance > pilot.distance){
+            if(queryPilot.distance > pilot.distance){
                 const del = await query.docs[0].ref.delete();
                 const res = await db.collection('pilots').add(pilot);
-                console.log(`Pilot ID ${pilot.pilotId} distance updated from ${queryPilot.distance} to ${pilot.distance}`)
+                console.log(`${pilot.firstName} ${pilot.lastName} distance updated from ${queryPilot.distance} to ${pilot.distance}`)
             }
             else{
-                // Update time detected
-                // const update = await query.docs[0].ref().update({timeDetected: new Date().getTime()})
+                // Update latest time detected
                 const pilotRef = query.docs[0].ref;
                 const update = await pilotRef.update({timeDetected: new Date().getTime()})
-                console.log('New time detected for document pilot id ' + query.docs[0].data().pilotId)
+                let data = query.docs[0].data()
+                console.log('New latest time detected for ' + data.firstName, data.lastName)
             }
         }
     }
@@ -99,17 +103,18 @@ async function removeOld(){
     
     // Remove pilots
     await Promise.all(pilotsToRemove.docs.map(doc => {
-        console.log('Removing ' + doc.id)
+        let data = doc.data()
+        console.log('Removing ' + data.firstName, data.lastName)
         doc.ref.delete()}));
 }
 
 function calculateDistance(drone){
-    let x = parseInt(drone.positionX[0]);
-    let y = parseInt(drone.positionY[0]);
+    let x1 = parseInt(drone.positionX[0]);
+    let y1 = parseInt(drone.positionY[0]);
     let x0 = 250000;
     let y0 = 250000;
     let r = 100000;
-    let distance = Math.abs(Math.sqrt((x - x0)**2 + (y - y0)**2));
+    let distance = Math.abs(Math.sqrt((x1 - x0)**2 + (y1 - y0)**2));
     return distance
 }
 
