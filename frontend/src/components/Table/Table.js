@@ -1,29 +1,38 @@
-import { React, useEffect, useState} from 'react';
+import { React, useEffect, useState, useMemo} from 'react';
 import {db} from '../../firebaseConfig.js'
 import { collection, query, onSnapshot } from "firebase/firestore";
 
 function Table(props){
 
     const [pilots, setPilots] = useState([])
+    const [sortBy, setSortBy] = useState("timeDetected")
 
     useEffect(() => {
-        console.log('useffect')
         let q = query(collection(db, 'pilots'));
         onSnapshot(q, (snapShot) => {
             let pilotsResult = [];
             snapShot.docs.map(doc => pilotsResult.push(doc.data()));
 
-            // sort by timeDetected
+            // sort by chosen parameter
             pilotsResult.sort(function(a,b){
-                return b.timeDetected - a.timeDetected
+                switch (sortBy){
+                    case 'timeDetected':
+                        return b[sortBy] - a[sortBy];
+                    case 'distance':
+                        return a[sortBy] - b[sortBy];
+                    case 'firstName':
+                    case 'lastName':
+                        return a[sortBy].localeCompare(b[sortBy])
+
+                }
             })
             setPilots(pilotsResult);
         })
-    },[])
+    },[sortBy])
 
-    useEffect(() => {
-        console.log(pilots)
-    },[pilots])
+    function onHeaderClick(value){
+        setSortBy(value)
+    }
 
     function DataRows(){
         let rows = [];
@@ -36,6 +45,7 @@ function Table(props){
             rows.push(
                 <tr>
                     <td>{distance} meters</td>
+                    <td>{pilot.firstName}</td>
                     <td>{pilot.lastName}</td>
                     <td>{pilot.email}</td>
                     <td>{pilot.phoneNumber}</td>
@@ -49,11 +59,12 @@ function Table(props){
     return (
         <table>
             <tr>
-                <th>Closest Distance</th>
-                <th>Name</th>
+                <th id='sortable' onClick={() => onHeaderClick('distance')}>Closest Distance</th>
+                <th id='sortable' onClick={() => onHeaderClick('firstName')}>Firstname</th>
+                <th id='sortable' onClick={() => onHeaderClick('lastName')}>Lastname</th>
                 <th>Email</th>
                 <th>Phone</th>
-                <th>Time</th>
+                <th id='sortable' onClick={() => onHeaderClick('timeDetected')}>Time</th>
             </tr>
             <DataRows />
         </table>

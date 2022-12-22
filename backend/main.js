@@ -2,6 +2,7 @@ const fetch = require('node-fetch')
 const xml2js = require('xml2js')
 const admin = require('firebase-admin')
 const service_account = require('./service_account.json')
+const chalk = require('chalk')
 
 admin.initializeApp({
     credential: admin.credential.cert(service_account)
@@ -14,6 +15,9 @@ const parser = xml2js.Parser();
  */
 async function getDrones(){
     return fetch('http://assignments.reaktor.com/birdnest/drones')
+        .then(async (result) => {
+            if (result.ok){return result}
+        })
         .then(result => result.text())
         .then(result => parser.parseStringPromise(result))
         .then(result => {
@@ -31,6 +35,7 @@ async function getDrones(){
             let tuples = filtered.map(drone => [drone.serialNumber[0], calculateDistance(drone)]);   
             return tuples;
         })
+        .catch(e => console.log(chalk.redBright('Connection error', e)))
 }
 
 /**
@@ -73,11 +78,18 @@ async function sendToFirestore(pilots){
         // if doesnt exist in database add pilot there
         if (query.docs.length == 0){
             const res = await db.collection('pilots').add(pilot);
-            console.log(pilot.firstName, pilot.lastName,' added with document id: ' + res.id)
+            console.log(chalk.green(`${pilot.firstName} ${pilot.lastName} added with document id: ${res.id}`))
+        }
+        // Delete possible duplicates
+        else if (query.docs.length > 1){
+            for (let i = 1; i < query.docs.length; i++){
+                console.log(chalk.yellow('Removing duplicate of ', pilot.firstName, pilot.lastName))
+                await query.docs[i].ref.delete();
+            }
         }
         // if exists replace with new doc with new distance
         // or update time detected
-        else{
+        if (query.docs.length == 1){
             let queryPilot = query.docs[0].data(); // Query result is list containing one object 
             if(queryPilot.distance > pilot.distance){
                 const del = await query.docs[0].ref.delete();
@@ -92,9 +104,12 @@ async function sendToFirestore(pilots){
                 console.log('New latest time detected for ' + data.firstName, data.lastName)
             }
         }
+        
     }
 }
-
+/**
+ *  Removes over 10 minutes old documents from firestore
+ */
 async function removeOld(){
     // Time 10 minutes ago
     let time = new Date().getTime() - 600000;
@@ -104,7 +119,7 @@ async function removeOld(){
     // Remove pilots
     await Promise.all(pilotsToRemove.docs.map(doc => {
         let data = doc.data()
-        console.log('Removing ' + data.firstName, data.lastName)
+        console.log(chalk.red('Removing ' + data.firstName, data.lastName))
         doc.ref.delete()}));
 }
 
@@ -127,5 +142,5 @@ async function main(){
 }
 
 setInterval((async () => {
-    main();
+    await main();
 }), 2000)

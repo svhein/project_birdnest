@@ -1,14 +1,61 @@
 .App {
+  display: flex;
+  justify-content: center;
   text-align: center;
-  background-color: beige;
+  background-color: rgb(255, 255, 255);
+  
+}
+
+table{
+  background-color: rgb(242, 244, 245);
+  border-collapse:separate; 
+  border-spacing: 0 0.2em;
+  display: block;
+  height: 100vh;
+  white-space: nowrap;
+  overflow-y: auto;
+
+  /* mozilla scrollbar */
+  scrollbar-color: rgb(0242, 244, 245) rgb(255, 255, 255);
+  scrollbar-width: thin;
 }
 
 th{
-  background-color: beige;
+  background-color: rgb(255, 255, 255);
   position: sticky;
   top: 0px;
 }
 
-tr:nth-child(even) {
-  background-color: rgb(232, 232, 255);
+tr{
+  background-color: white;
+}
+
+td{
+  padding: 1rem;
+}
+
+#sortable:hover{
+  cursor: pointer;
+}
+
+
+
+/* SCROLLBAR WEBKIT */
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+/* Track */
+::-webkit-scrollbar-track {
+  background: white;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgb(242, 244, 245);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(242, 244, 245);
 }
