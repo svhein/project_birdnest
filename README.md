@@ -105,13 +105,15 @@ My solution contains node.js app that fetches data from endpoints, database (Fir
 1. Fetch data from drones api
 2. Filter drones that are inside the no-drone-zone
 3. Fetch pilots by the drone serialnumbers
-4. Make necessary updates to database
-5. Loop steps 1 - 4 every 2 seconds
+4. Add pilots to database
+5. Remove pilots which haven't been detected for 10 minutes
+6. Loop steps 1 - 6 every 2 seconds
 
 The app is dockerized and it's running on Google Cloud platfrom.
 
+### React app
 
-
+I started developing my React app by running `npx create-react-app`. The app listens changes on the Firestore and renders the Firestore content in the table. I added mechanism to sort the values by clicking the column header.
 
 
 
