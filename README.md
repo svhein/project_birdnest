@@ -115,5 +115,8 @@ The app is dockerized and it's running on Google Cloud platfrom.
 
 I started developing my React app by running `npx create-react-app`. The app listens changes on the Firestore and renders the Firestore content in the table. I added mechanism to sort the values by clicking the column header.
 
+## Licence
+### Apache 2.0 License
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
