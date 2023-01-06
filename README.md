@@ -11,7 +11,7 @@ My pre-assignment solution to Reaktor Developer Trainee 2023 application.
 - Immediately show the information from the last 10 minutes to anyone opening the application
 - Not require the user to manually refresh the view to see up-to-date information
 
-[A drones position endpoint](assignments.reaktor.com/birdnest/drones) provides snapshot of drones within 500 x 500 meters within the monitoring equipment:
+[A drones position endpoint](assignments.reaktor.com/birdnest/drones) updates every 2 seconds and it provides snapshot of drones within 500 x 500 meters of the monitoring equipment:
 ```xml
 <report>
    <deviceInformation deviceId="GUARDB1RD">
@@ -85,7 +85,7 @@ My pre-assignment solution to Reaktor Developer Trainee 2023 application.
 </report>
 ``` 
 
-Pilot endpoint at [assignments.reaktor.com/birdnest/pilots/:serialNumber](assignments.reaktor.com/birdnest/pilots/:serialNumber) provides data about pilot by drone serialnumber:
+Pilot endpoint at [assignments.reaktor.com/birdnest/pilots/:serialNumber](assignments.reaktor.com/birdnest/pilots/:serialNumber) provide JSON about pilot by drone serialnumber:
 ```json
 {
    "pilotId":"P-2BGDCD-I_K",
@@ -96,6 +96,22 @@ Pilot endpoint at [assignments.reaktor.com/birdnest/pilots/:serialNumber](assign
    "email":"parker.gusikowski@example.com"
 }
 ```
+## Solution
+
+My solution contains node.js app that fetches data from endpoints, database (Firebase Firestore), and React app that listens the database changes.
+
+### Node.js app in nutshell:
+
+1. Fetch data from drones api
+2. Filter drones that are inside the no-drone-zone
+3. Fetch pilots by the drone serialnumbers
+4. Make necessary updates to database
+5. Loop steps 1 - 4 every 2 seconds
+
+The app is dockerized and it's running on Google Cloud platfrom.
+
+
+
 
 
 
