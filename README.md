@@ -107,7 +107,7 @@ My solution contains node.js app that fetches data from endpoints, database (Fir
 3. Fetch pilots by the drone serialnumbers
 4. Add pilots to database
 5. Remove pilots which haven't been detected for 10 minutes
-6. Loop steps 1 - 6 every 2 seconds
+6. Loop steps 1 - 5 every 2 seconds
 
 The app is dockerized and it's running on Google Cloud platfrom.
 
