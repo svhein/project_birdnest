@@ -98,7 +98,11 @@ Pilot endpoint at [assignments.reaktor.com/birdnest/pilots/:serialNumber](assign
 ```
 ## Solution
 
-My solution contains node.js app that fetches data from endpoints, database (Firebase Firestore), and React app that listens the database changes.
+My solution contains
+
+- node.js app that fetches data from endpoints, running as google cloud compute engine instance
+- database (Firebase Firestore)
+- React app that listens the database changes.
 
 ### Node.js app in nutshell:
 
@@ -109,11 +113,6 @@ My solution contains node.js app that fetches data from endpoints, database (Fir
 5. Remove pilots which haven't been detected for 10 minutes
 6. Loop steps 1 - 5 every 2 seconds
 
-The app is dockerized and it's running on Google Cloud platfrom.
-
-### React app
-
-I started developing my React app by running `npx create-react-app`. The app listens changes on the Firestore and renders the Firestore content in the table. I added mechanism to sort the values by clicking the column header.
 
 ## Licence
 ### Apache 2.0 License
