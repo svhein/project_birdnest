@@ -100,7 +100,7 @@ Pilot endpoint at [assignments.reaktor.com/birdnest/pilots/:serialNumber](assign
 
 My solution contains
 
-- node.js app that fetches data from endpoints and updates database running as google cloud compute engine instance
+- node.js app that fetches data from endpoints and updates database, running as google cloud compute engine instance
 - database (Firebase Firestore)
 - React app that listens the database changes.
 
