@@ -2,7 +2,7 @@ My pre-assignment solution to Reaktor Developer Trainee 2023 application.
 
 # Project Birdnest
 
-[birdnest-d418e.firebaseapp.com](birdnest-d418e.firebaseapp.com)
+[birdnest-d418e.firebaseapp.com](https://birdnest-d418e.firebaseapp.com/)
 
 ## Objective
 **Build and deploy a web application which lists all the pilots who recently violated the No-Drone-Zone perimeter of 100 meters.**
